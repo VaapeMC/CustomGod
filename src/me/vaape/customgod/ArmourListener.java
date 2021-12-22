@@ -1,5 +1,6 @@
 package me.vaape.customgod;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -29,11 +30,11 @@ public class ArmourListener implements Listener {
 			if (GodItems.isGod(armor)) {
 				if (GodItems.getGodName(armor).equalsIgnoreCase("daedric helm")) {
 					player.setMaxHealth(maxHealth + 4);
-					player.removePotionEffect(PotionEffectType.FIRE_RESISTANCE);
+					//player.removePotionEffect(PotionEffectType.FIRE_RESISTANCE);
 					player.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, Integer.MAX_VALUE, 0));
 				}
 				if (GodItems.getGodName(armor).equalsIgnoreCase("theseus")) {
-					player.removePotionEffect(PotionEffectType.INCREASE_DAMAGE);
+					//player.removePotionEffect(PotionEffectType.INCREASE_DAMAGE);
 					player.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, Integer.MAX_VALUE, 1));
 				}
 				if (GodItems.getGodName(armor).equalsIgnoreCase("warlord cuirass")) {
@@ -41,11 +42,25 @@ public class ArmourListener implements Listener {
 				}
 				if (GodItems.getGodName(armor).equalsIgnoreCase("hermes leggings")) {
 					player.setMaxHealth(maxHealth + 4);
-					player.removePotionEffect(PotionEffectType.SPEED);
+					//player.removePotionEffect(PotionEffectType.SPEED);
 					player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 1));
 				}
 				if (GodItems.getGodName(armor).equalsIgnoreCase("brightwing")) {
 					player.setMaxHealth(maxHealth + 4);
+				}
+				else if (GodItems.getGodName(armor).equalsIgnoreCase("snowy helm")) {
+					player.setMaxHealth(maxHealth + 6);
+				}
+				else if (GodItems.getGodName(armor).equalsIgnoreCase("snowy chest")) {
+					player.setMaxHealth(maxHealth + 6);
+					player.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, Integer.MAX_VALUE, 1));
+				}
+				else if (GodItems.getGodName(armor).equalsIgnoreCase("snowy legs")) {
+					player.setMaxHealth(maxHealth + 6);
+					player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 1));
+				}
+				else if (GodItems.getGodName(armor).equalsIgnoreCase("snowy boots")) {
+					player.setMaxHealth(maxHealth + 6);
 				}
 			}
 		}
@@ -59,19 +74,33 @@ public class ArmourListener implements Listener {
 					player.setMaxHealth(maxHealth - 4);
 					player.removePotionEffect(PotionEffectType.FIRE_RESISTANCE);					
 				}
-				if (GodItems.getGodName(armor).equalsIgnoreCase("theseus")) {
+				else if (GodItems.getGodName(armor).equalsIgnoreCase("theseus")) {
 					player.removePotionEffect(PotionEffectType.INCREASE_DAMAGE);
 				}
-				if (GodItems.getGodName(armor).equalsIgnoreCase("warlord cuirass")) {
+				else if (GodItems.getGodName(armor).equalsIgnoreCase("warlord cuirass")) {
 					player.setMaxHealth(maxHealth - 8);
 				}
-				if (GodItems.getGodName(armor).equalsIgnoreCase("hermes leggings")) {
+				else if (GodItems.getGodName(armor).equalsIgnoreCase("hermes leggings")) {
 					player.setMaxHealth(maxHealth - 4);
 					player.removePotionEffect(PotionEffectType.SPEED);
 				}
-				if (GodItems.getGodName(armor).equalsIgnoreCase("brightwing")) {
+				else if (GodItems.getGodName(armor).equalsIgnoreCase("brightwing")) {
 					player.setMaxHealth(maxHealth - 4);
-				}				
+				}
+				else if (GodItems.getGodName(armor).equalsIgnoreCase("snowy helm")) {
+					player.setMaxHealth(maxHealth - 6);
+				}
+				else if (GodItems.getGodName(armor).equalsIgnoreCase("snowy chest")) {
+					player.setMaxHealth(maxHealth - 6);
+					player.removePotionEffect(PotionEffectType.INCREASE_DAMAGE);
+				}
+				else if (GodItems.getGodName(armor).equalsIgnoreCase("snowy legs")) {
+					player.setMaxHealth(maxHealth - 6);
+					player.removePotionEffect(PotionEffectType.SPEED);
+				}
+				else if (GodItems.getGodName(armor).equalsIgnoreCase("snowy boots")) {
+					player.setMaxHealth(maxHealth - 6);
+				}
 			}
 		}
 	}
@@ -97,9 +126,11 @@ public class ArmourListener implements Listener {
 	//Prevent hearts stacking from daedric helm
 	@EventHandler
 	public void onHatCommand (PlayerCommandPreprocessEvent event) {
-		if (event.getMessage().toLowerCase().startsWith("hat")) {
+		
+		if (event.getMessage().toLowerCase().startsWith("/hat ") || event.getMessage().toLowerCase().equalsIgnoreCase("/hat")) {
+
 			if (event.getPlayer().getInventory().getHelmet() != null) {
-				event.getPlayer().sendMessage(ChatColor.RED + "You must take off your current hat before puttin on a new one.");
+				event.getPlayer().sendMessage(ChatColor.RED + "You must take off your current hat before putting on a new one.");
 				event.setCancelled(true);
 			}
 		}

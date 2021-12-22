@@ -14,3 +14,5 @@ commands:
     description: Checks the status of your God Repair
   godrepair:
     description: Checks the status of your God Repair
+  refreshrepairs:
+    description: Refreshes all god repairs

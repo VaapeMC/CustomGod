@@ -22,7 +22,11 @@ import org.bukkit.entity.EnderDragon;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.PrepareItemCraftEvent;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.SmithingInventory;
@@ -68,23 +72,7 @@ public class CustomGod extends JavaPlugin implements Listener {
 	    armourListener = new ArmourListener();
 	    this.getServer().getPluginManager().registerEvents(armourListener, instance);
 	    
-	    Date timeToAddRepair = (Date) config.get("time to add repair");
-		long timeToAddRepairInMillis = timeToAddRepair.getTime();
-		Date now = new Date();
-		long nowInMillis = now.getTime();
-		
-		if (timeToAddRepairInMillis <= nowInMillis) { //True if time is in the past
-			addGlobalRepairs(20);
-			getLogger().info(ChatColor.YELLOW + "God repairs have been granted...");
-		}
-		else {
-			//Create the timer to refresh kits saved by config			
-			long timeUntilAddRepairInMillis = timeToAddRepairInMillis - nowInMillis; //Get the difference in milliseconds from now until when it should add repair
-			long timeUntilAddRepairInSeconds = timeUntilAddRepairInMillis/1000;
-			
-			addGlobalRepairs((int) timeUntilAddRepairInSeconds * 20);
-		}
-	}
+	   }
 	
 	public void loadConfiguration() {
 		final FileConfiguration config = this.getConfig();
@@ -115,6 +103,12 @@ public class CustomGod extends JavaPlugin implements Listener {
 					sender.sendMessage(ChatColor.RED + "Wrong usage, try /giverepair [player]");
 					return false;
 				}
+			}
+		}
+		if (cmd.getName().equalsIgnoreCase("refreshrepairs")) {
+			if (sender.hasPermission("customgod.refreshrepairs")) {
+				addGlobalRepairs();
+				sender.sendMessage(ChatColor.GREEN + "Repairs have been refreshed.");
 			}
 		}
 		else if (cmd.getName().equalsIgnoreCase("removerepair")) {
@@ -234,7 +228,7 @@ public class CustomGod extends JavaPlugin implements Listener {
 					shadowsEdgeLore.add("");
 					shadowsEdgeLore.add(ChatColor.ITALIC + "Consumes the souls");
 					shadowsEdgeLore.add(ChatColor.ITALIC + "of its victims...");
-					shadowsEdgeLore.add(ChatColor.AQUA +"- Weakens the enemy");
+					shadowsEdgeLore.add(ChatColor.AQUA +"- Withers the enemy");
 					shadowsEdgeLore.add("");
 					shadowsEdgeLore.add(ChatColor.GRAY + "Kills: " + 0);
 					shadowsEdgeLore.add(ChatColor.GRAY + "Times repaired: " + 0);
@@ -286,7 +280,7 @@ public class CustomGod extends JavaPlugin implements Listener {
 					
 					//Kamatayon
 					ItemStack kamatayon = new ItemStack(Material.DIAMOND_HOE);
-					kamatayon.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 10);
+					kamatayon.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 5);
 					kamatayon.addUnsafeEnchantment(Enchantment.DURABILITY, 4);
 					kamatayon.addUnsafeEnchantment(Enchantment.DAMAGE_ARTHROPODS, 10);
 					ItemMeta kamatayonMeta = kamatayon.getItemMeta();
@@ -543,33 +537,19 @@ public class CustomGod extends JavaPlugin implements Listener {
 		return false;
 	}
 	
-	private void addGlobalRepairs(int ticks) {
-		Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(instance, new Runnable() {
-			
-			@Override
-			public void run() {
-				//Loop through list of people with god repairs, add 1 if they have 0
-				Set<String> uuids = config.getConfigurationSection("repairs").getKeys(false);
-				for (String uuid : uuids) {
-					int numberOfRepairs = config.getInt("repairs." + uuid);
-					if (numberOfRepairs == 0) {
-						OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
-						addRepair(uuid);
-					}
-				}
-				
-				//Set new date for repairing 1 week in future
-				Date now = new Date();
-				Date nextGlobalRepairDate = addDaysToJavaUtilDate(now, 7);
-				long nextGlobalRepairDateInMillis = nextGlobalRepairDate.getTime();
-				long nextGlobalRepairDateInSeconds = nextGlobalRepairDateInMillis / 1000;
-				
-				config.set("time to add repair", nextGlobalRepairDate);
-				saveConfig();
-				
-				Bukkit.getServer().broadcastMessage(ChatColor.RED + "" + ChatColor.BOLD + "[God Forge] " + ChatColor.BLUE + ChatColor.BOLD + "God repairs have been refreshed!"); 
-			}		
-		}, ticks);
+	private void addGlobalRepairs() {
+		//Loop through list of people with god repairs, add 1 if they have 0
+		Set<String> uuids = config.getConfigurationSection("repairs").getKeys(false);
+		for (String uuid : uuids) {
+			int numberOfRepairs = config.getInt("repairs." + uuid);
+			if (numberOfRepairs == 0) {
+				OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
+				addRepair(uuid);
+			}
+		}
+		
+		Bukkit.getServer().broadcastMessage(ChatColor.RED + "" + ChatColor.BOLD + "[God Forge] " + ChatColor.BLUE + ChatColor.BOLD + "God repairs have been refreshed!"); 
+	
 	}
 	
 	
@@ -632,4 +612,51 @@ public class CustomGod extends JavaPlugin implements Listener {
 		}
 	}
 	
+	@EventHandler
+	public void onCommandPreprocess (PlayerCommandPreprocessEvent event) {
+		//
+		int spaceIndex = event.getMessage().indexOf(" ");
+		String label = "";
+		if (spaceIndex != -1) {
+			label = event.getMessage().substring(spaceIndex);
+		}
+		else {
+			label = event.getMessage();
+		}
+		if (label.equalsIgnoreCase("hat")) {
+			ItemStack helmet = event.getPlayer().getInventory().getHelmet();
+			if (GodItems.getGodName(helmet).equals("daedric helm") || GodItems.getGodName(helmet).equals("snowy helm")) {
+				event.setCancelled(true);
+				event.getPlayer().sendMessage(ChatColor.RED + "You cannot use /hat with a God helmet on.");
+			}
+		}
+	}
+	
+	@EventHandler
+	public void onDye (PrepareItemCraftEvent event) {
+		if (event.getInventory().getResult() == null) return;
+		if (GodItems.isGod(event.getInventory().getResult())) {
+			event.getInventory().setResult(new ItemStack(Material.AIR));
+		}
+	}
+	
+	@EventHandler
+	public void onInteract (PlayerInteractEvent event) {
+		if (event.getClickedBlock() != null) {
+			if (event.getClickedBlock().getType() == Material.WATER_CAULDRON) {
+				if (event.getPlayer().getInventory().getItemInMainHand() != null) {
+					if (GodItems.isGod(event.getPlayer().getInventory().getItemInMainHand())) {
+						event.setCancelled(true);
+						event.getPlayer().sendMessage(ChatColor.RED + "You cannot click cauldrons with God items.");
+					}
+				}
+				if (event.getPlayer().getInventory().getItemInOffHand() != null) {
+					if (GodItems.isGod(event.getPlayer().getInventory().getItemInOffHand())) {
+						event.setCancelled(true);
+						event.getPlayer().sendMessage(ChatColor.RED + "You cannot click cauldrons with God items.");
+					}
+				}
+			}
+		}
+	}
 }

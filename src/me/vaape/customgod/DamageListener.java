@@ -22,9 +22,12 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.entity.EntityInteractEvent;
 import org.bukkit.event.entity.EntityShootBowEvent;
+import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemDamageEvent;
+import org.bukkit.event.player.PlayerItemHeldEvent;
+import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.inventory.EquipmentSlot;
@@ -45,6 +48,7 @@ import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import com.sk89q.worldguard.protection.flags.Flags;
+import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.sk89q.worldguard.protection.regions.RegionContainer;
 import com.sk89q.worldguard.protection.regions.RegionQuery;
 
@@ -108,7 +112,7 @@ public class DamageListener implements Listener{
 						if (hand.getLore().contains(ChatColor.AQUA + "- Weakens the enemy")) { //Old Shadow's edge before reward will have this, reworked one will not
 							livingDefender.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 4 * 20, 1), true);
 						}
-						if (!isRoyalty(livingDefender)) {
+						if (hand.getLore().contains(ChatColor.AQUA + "- Withers the enemy")) { //Old Shadow's edge before reward will have this, reworked one will not
 							livingDefender.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 4 * 20, 1), true);
 						}
 					}
@@ -168,6 +172,53 @@ public class DamageListener implements Listener{
 			if (arrow.getCustomName() != null) {
 				if (arrow.getCustomName().contains("medusa")) {
 					livingDefender.addPotionEffect(new PotionEffect(PotionEffectType.POISON, 4 * 20, 3), true);
+				}
+				else if (arrow.getCustomName().contains("glacial bow")) {
+					
+					org.bukkit.Location location = defender.getLocation();
+					
+					if (inSpawn(location)) {
+						return;
+					}
+					
+					location.getBlock().setType(Material.ICE);
+					location.clone().add(1, 0, 0).getBlock().setType(Material.ICE);
+					location.clone().add(0, 0, 1).getBlock().setType(Material.ICE);
+					location.clone().add(1, 0, 1).getBlock().setType(Material.ICE);
+					location.clone().add(0, 1, 0).getBlock().setType(Material.ICE);
+					location.clone().add(1, 1, 0).getBlock().setType(Material.ICE);
+					location.clone().add(0, 1, 1).getBlock().setType(Material.ICE);
+					location.clone().add(1, 1, 1).getBlock().setType(Material.ICE);
+				}
+			}
+		}
+	}
+	
+	@EventHandler
+	public void onArrowHit(ProjectileHitEvent event) {
+		
+		if (event.getEntity() instanceof Arrow) {
+			
+			Arrow arrow = (Arrow) event.getEntity();
+			
+			if (arrow.getCustomName() != null) {
+				
+				if (arrow.getCustomName().equals("glacial bow")) {
+					
+					org.bukkit.Location location = event.getEntity().getLocation();
+					
+					if (inSpawn(location)) {
+						return;
+					}
+					
+					location.getBlock().setType(Material.ICE);
+					location.clone().add(1, 0, 0).getBlock().setType(Material.ICE);
+					location.clone().add(0, 0, 1).getBlock().setType(Material.ICE);
+					location.clone().add(1, 0, 1).getBlock().setType(Material.ICE);
+					location.clone().add(0, 1, 0).getBlock().setType(Material.ICE);
+					location.clone().add(1, 1, 0).getBlock().setType(Material.ICE);
+					location.clone().add(0, 1, 1).getBlock().setType(Material.ICE);
+					location.clone().add(1, 1, 1).getBlock().setType(Material.ICE);
 				}
 			}
 		}
@@ -261,10 +312,11 @@ public class DamageListener implements Listener{
 			return;
 		}
 		
+		Player player = event.getPlayer();		
+		ItemStack hand = player.getInventory().getItemInMainHand();
+		
 		if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
 
-			Player player = event.getPlayer();
-			ItemStack hand = player.getInventory().getItemInMainHand();
 			if (hand != null && hand.getType() != Material.AIR) {
 				if (GodItems.isGod(hand)) {
 					
@@ -300,11 +352,12 @@ public class DamageListener implements Listener{
 							});
 							
 							mjolnirCooldownTask.get(UUID).runTaskTimer(CustomGod.getInstance(), 20, 20);
+							return;
 						}
 					}
 				}
 			}
-		}
+		}		
 	}
 	
 	@EventHandler
@@ -373,7 +426,10 @@ public class DamageListener implements Listener{
 			if (bow.hasItemMeta()) {
 				if (GodItems.getGodName(bow).equalsIgnoreCase("medusa")) {
 					event.getProjectile().setCustomName("medusa");
-				}	
+				}
+				else if (GodItems.getGodName(bow).equalsIgnoreCase("glacial bow")) {
+					event.getProjectile().setCustomName("glacial bow");
+				}
 			}
 		}
 	}
@@ -402,42 +458,50 @@ public class DamageListener implements Listener{
 			}
 		}
 	}
-
+	
 	@EventHandler
-	public void onArmorDamage (PlayerItemDamageEvent event) {
-		if (event.getItem().getLore() != null) {
-			if (event.getItem().getLore().contains(ChatColor.AQUA + "- Ultra durable")) {
-				double random = Math.random();
-				//50% chance to not reduce durability
-				if (random > 0.6) {
-					Bukkit.getServer().broadcastMessage(ChatColor.YELLOW + "Didn't reduce durability");
-					event.setCancelled(true);
+	public void onHandSwap (PlayerItemHeldEvent event) {
+		
+		new BukkitRunnable() {
+			
+			@Override
+			public void run() {
+				// TODO Auto-generated method stub
+				Player player = event.getPlayer();		
+				ItemStack hand = player.getInventory().getItemInMainHand();
+				
+				if (hand != null && hand.getType() != Material.AIR) {
+					
+					if (GodItems.isGod(hand)) {
+						
+						if (GodItems.getGodName(hand).equalsIgnoreCase("glacial brand")) {
+							
+							if (player.getWorld().hasStorm()) {
+								
+								player.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 15 * 20, 2, false, true, true));
+								player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ILLUSIONER_PREPARE_BLINDNESS, 1f, 1.5f);
+							}
+						}
+					}
 				}
 			}
-			if (event.getItem().getLore().contains(ChatColor.AQUA + "- Ultra durable")) {
-				double random = Math.random();
-				//50% chance to not reduce durability
-				if (random > 0.7) {
-					Bukkit.getServer().broadcastMessage(ChatColor.YELLOW + "Didn't reduce durability");
-					event.setCancelled(true);
-				}
-			}
-			if (event.getItem().getLore().contains(ChatColor.YELLOW + "- Ultra durable")) {
-				double random = Math.random();
-				//50% chance to not reduce durability
-				if (random > 0.8) {
-					Bukkit.getServer().broadcastMessage(ChatColor.YELLOW + "Didn't reduce durability");
-					event.setCancelled(true);
-				}
-			}
-			if (event.getItem().getLore().contains(ChatColor.RED + "- Ultra durable")) {
-				double random = Math.random();
-				//50% chance to not reduce durability
-				if (random > 0.9) {
-					Bukkit.getServer().broadcastMessage(ChatColor.YELLOW + "Didn't reduce durability");
-					event.setCancelled(true);
-				}
+		}.runTaskLater(CustomGod.getInstance(), 1);
+	}
+	
+	public static boolean inSpawn(org.bukkit.Location location) {
+		World world = location.getWorld();
+		
+		com.sk89q.worldedit.util.Location WElocation = new com.sk89q.worldedit.util.Location(BukkitAdapter.adapt(world), location.getX(), location.getY(), location.getZ());
+		
+		RegionContainer container = WorldGuard.getInstance().getPlatform().getRegionContainer();
+		RegionQuery query = container.createQuery();
+		ApplicableRegionSet set = query.getApplicableRegions(WElocation);
+		
+		for (ProtectedRegion region : set) {
+			if (region.getId().equalsIgnoreCase("spawn")) {
+				return true;
 			}
 		}
+		return false;
 	}
 }

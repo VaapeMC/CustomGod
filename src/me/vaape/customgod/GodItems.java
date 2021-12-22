@@ -30,7 +30,16 @@ public class GodItems {
 						lore.contains(ChatColor.ITALIC + "Ancient untranslatable runes") || //Shadow Seeker
 						lore.contains(ChatColor.ITALIC + "Found at the bottom of") || //Fisherman's Friend
 						lore.contains(ChatColor.ITALIC + "Said to have corrupted") || //Cane of Zefeus
-						lore.contains(ChatColor.ITALIC + "Found under the corpse of")) { //Dalabrus
+						lore.contains(ChatColor.ITALIC + "Found under the corpse of") || //Dalabrus
+						lore.contains(ChatColor.ITALIC + "The soils and sands must") || //Dalabrus
+						lore.contains(ChatColor.ITALIC + "Your crushing blows are") || //Glacial Brand
+						lore.contains(ChatColor.ITALIC + "The soils and sands must") || //Glacial Bow
+						lore.contains(ChatColor.ITALIC + "A climber's best friend") || //Ice pick
+						(lore.contains(ChatColor.GREEN + "Christmas 2021") && stack.getType() == Material.LEATHER_HELMET) || //Snowy helm
+						(lore.contains(ChatColor.GREEN + "Christmas 2021") && stack.getType() == Material.LEATHER_CHESTPLATE) || //Snowy chest
+						(lore.contains(ChatColor.GREEN + "Christmas 2021") && stack.getType() == Material.LEATHER_LEGGINGS) || //Snowy legs
+						(lore.contains(ChatColor.GREEN + "Christmas 2021") && stack.getType() == Material.LEATHER_BOOTS)) { //Snowy boots
+						
 						return true;
 					}
 					else {
@@ -89,7 +98,10 @@ public class GodItems {
 			getGodName(stack).equals("shadow seeker") ||
 			getGodName(stack).equals("fisherman's friend") ||
 			getGodName(stack).equals("cane of zefeus") ||
-			getGodName(stack).equals("dalabrus")) {
+			getGodName(stack).equals("dalabrus") ||
+			getGodName(stack).equals("glacial brand") ||
+			getGodName(stack).equals("glacial bow") ||
+			getGodName(stack).equals("ice pick")) {
 			return true;
 		}
 		else {
@@ -151,7 +163,27 @@ public class GodItems {
 					else if (lore.contains(ChatColor.ITALIC + "'As light as a feather, as silent")) {
 						return "brightwing";
 					}
-					
+					else if (lore.contains(ChatColor.ITALIC + "Your crushing blows are")) {
+						return "glacial brand";
+					}
+					else if (lore.contains(ChatColor.ITALIC + "The soils and sands must")) {
+						return "glacial bow";
+					}
+					else if (lore.contains(ChatColor.ITALIC + "A climber's best friend")) {
+						return "ice pick";
+					}
+					else if (lore.contains(ChatColor.GREEN + "Christmas 2021") && stack.getType() == Material.LEATHER_HELMET) {
+						return "snowy helm";
+					}
+					else if (lore.contains(ChatColor.GREEN + "Christmas 2021") && stack.getType() == Material.LEATHER_CHESTPLATE) {
+						return "snowy chest";
+					}
+					else if (lore.contains(ChatColor.GREEN + "Christmas 2021") && stack.getType() == Material.LEATHER_LEGGINGS) {
+						return "snowy legs";
+					}
+					else if (lore.contains(ChatColor.GREEN + "Christmas 2021") && stack.getType() == Material.LEATHER_BOOTS) {
+						return "snowy boots";
+					}
 					
 					else {
 						return null;
