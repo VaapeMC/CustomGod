@@ -18,9 +18,14 @@ repositories {
     maven {
         url = "https://maven.enginehub.org/repo/"
     }
+    flatDir {
+        dirs 'libs'
+    }
 }
 
 dependencies {
-    compileOnly('io.papermc.paper:paper-api:1.18.1-R0.1-SNAPSHOT')
+    compileOnly('io.papermc.paper:paper-api:1.18.2-R0.1-SNAPSHOT')
     compileOnly('com.sk89q.worldguard:worldguard-bukkit:7.0.1')
+    implementation files('libs/EnchantFormat-1.0.0.jar')
+    implementation files('libs/PlayerHeads.jar')
 }

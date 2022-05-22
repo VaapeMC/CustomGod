@@ -7,399 +7,202 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.player.PlayerChatEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.inventory.AnvilInventory;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.*;
+import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.jetbrains.annotations.Async;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 public class ForgeListener implements Listener {
 
     private static final CustomGod plugin = CustomGod.getInstance();
 
-    public static boolean xpTake30 = false;
-    public static boolean xpTake50 = false;
-    public static boolean is30 = false;
-    public static boolean notEnoughXPMessage = false;
-    public static boolean applyingEnchants = false;
-
-
     @EventHandler
-    public static void onInventoryClick(InventoryClickEvent event) {
-
-        if (event.getWhoClicked() instanceof Player player) {
-            Location location = player.getLocation();
-            double x = location.getX();
-            double y = location.getY();
-            double z = location.getZ();
-            if ((x > 43 && x < 63) && (y > 208 && y < 228) && (z > 205 && z < 225)) { //cords of God Forge
-                Inventory inv = event.getInventory();
-                int originalXP = player.getLevel();
-
-                xpTake30 = false;
-                xpTake50 = false;
-                is30 = false;
-                notEnoughXPMessage = false;
-                applyingEnchants = false; //Used to avoid sending multiple error messages
-
-                if (inv instanceof AnvilInventory anvil) {
-                    ItemStack input = anvil.getItem(0);
-                    ItemStack addition = anvil.getItem(1);
-                    ItemStack result = anvil.getItem(2);
-                    int rawSlot = event.getRawSlot();
-                    String newName = anvil.getRenameText(); //Save rename text to apply to result later (creating an
-                    // instance of this after the 1 tick delay bugs it out)
-
-                    //Early cancel so can artificially build the event
-                    if (rawSlot == 2 && input != null && result != null) { //If player clicks the result box
-                        event.setCancelled(true);
-                    }
-                    Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() { //Has to be 1
-                        // tick after to update
-
-                        @Override
-                        public void run() {
-                            anvil.setRepairCost(30);
-                            if (rawSlot == 2) {
-                                if (GodItems.isGod(input)) {
-
-                                    //If addition is null then no item in addition slot
-                                    //If addition is != null then player is combining something with god item
-
-                                    //Repair
-                                    if (addition != null) {
-
-                                        if (addition.getEnchantments().size() > 0 || addition.getType() == Material.ENCHANTED_BOOK) {
-                                            player.sendMessage(ChatColor.RED + "You cannot apply enchants to God " +
-                                                                       "items.");
-                                            player.playSound(location, Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1f, 1f);
-                                            applyingEnchants = true;
-                                        } else {
-
-                                            //Analysing repair count
-                                            if (input.getItemMeta() != null) {
-                                                ItemMeta inputMeta = input.getItemMeta();
-                                                if (inputMeta.hasLore()) {
-                                                    List<String> inputLore = inputMeta.getLore();
-                                                    String[] repairLine = inputLore.get(inputLore.size() - 1).split(
-                                                            "\\s"); //Get "Times repaired: x" line of lore
-                                                    if (Arrays.asList(repairLine).contains("repaired:")) {
-                                                        int timesRepaired = Integer.parseInt(repairLine[2]);
-
-                                                        if (timesRepaired < 2) { //has been repaired 0 or 1 times,
-                                                            // making this time the 1st or 2nd time
-
-                                                            if (player.hasPermission("customgod.forge.repair.2")) {
-
-                                                                //Adding 1 to Times repaired
-                                                                String newRepairLine =
-                                                                        ChatColor.GRAY + repairLine[0] + " " + repairLine[1] + " " + (timesRepaired + 1);
-                                                                if (result != null) {
-                                                                    if (result.getItemMeta() != null) {
-                                                                        ItemMeta resultMeta = result.getItemMeta();
-                                                                        if (resultMeta.hasLore()) {
-                                                                            List<String> resultLore =
-                                                                                    resultMeta.getLore();
-                                                                            resultLore.set(resultLore.size() - 1,
-                                                                                           newRepairLine);
-                                                                            resultMeta.setLore(resultLore);
-                                                                            result.setItemMeta(resultMeta);
-
-                                                                            if (event.getCursor() == null || event.getCursor().getType() == Material.AIR) { //Incase player has item on cursor already
-
-                                                                                if (player.getLevel() >= 30) {
-                                                                                    xpTake30 = true; //Tells later
-                                                                                    // code to execute repair and
-                                                                                    // take 30 xp
-                                                                                } else {
-                                                                                    player.sendMessage(ChatColor.RED + "You must be at least level 30 to repair this item.");
-                                                                                    player.playSound(location,
-                                                                                                     Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1f, 1f);
-                                                                                    notEnoughXPMessage = true;
-                                                                                }
-                                                                            }
-                                                                        }
-                                                                    }
-                                                                }
-                                                            } else {
-                                                                player.sendMessage(ChatColor.RED + "You cannot repair" +
-                                                                                           " God items.");
-                                                                player.playSound(location,
-                                                                                 Sound.BLOCK_ENCHANTMENT_TABLE_USE,
-                                                                                 1f, 1f);
-                                                            }
-                                                        } else if (timesRepaired > 1 && timesRepaired < 4) { //Has
-                                                            // been repaired 2 or 3 times, making this time the 3rd
-                                                            // or 4th
-
-                                                            if (player.hasPermission("customgod.forge.repair.4")) {
-
-                                                                //Adding 1 to Times repaired
-                                                                String newRepairLine =
-                                                                        ChatColor.GRAY + repairLine[0] + " " + repairLine[1] + " " + (timesRepaired + 1);
-                                                                if (result != null) {
-                                                                    if (result.getItemMeta() != null) {
-                                                                        ItemMeta resultMeta = result.getItemMeta();
-                                                                        if (resultMeta.hasLore()) {
-                                                                            List<String> resultLore =
-                                                                                    resultMeta.getLore();
-                                                                            resultLore.set(resultLore.size() - 1,
-                                                                                           newRepairLine);
-                                                                            resultMeta.setLore(resultLore);
-                                                                            result.setItemMeta(resultMeta);
-
-                                                                            if (event.getCursor() == null || event.getCursor().getType() == Material.AIR) {
-
-                                                                                if (player.getLevel() >= 50) {
-                                                                                    xpTake50 = true; //Tells later
-                                                                                    // code to execute repair and
-                                                                                    // take 50 xp
-                                                                                } else {
-                                                                                    player.sendMessage(ChatColor.RED + "You must be at least level 50 to repair this item.");
-                                                                                    player.playSound(location,
-                                                                                                     Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1f, 1f);
-                                                                                    notEnoughXPMessage = true;
-                                                                                }
-                                                                            }
-                                                                        }
-                                                                    }
-                                                                }
-                                                            } else {
-                                                                player.sendMessage(ChatColor.RED + "You must be " +
-                                                                                           "Netherite rank to repair " +
-                                                                                           "God items more than 2 " +
-                                                                                           "times.");
-                                                                player.playSound(location,
-                                                                                 Sound.BLOCK_ENCHANTMENT_TABLE_USE,
-                                                                                 1f, 1f);
-                                                            }
-                                                        }
-
-                                                        //If has been repaired 4 or more times
-                                                        else {
-
-                                                            if (player.hasPermission("customgod.forge.repair" +
-                                                                                             ".unlimited")) {
-
-                                                                //Adding 1 to Times repaired
-                                                                String newRepairLine =
-                                                                        ChatColor.GRAY + repairLine[0] + " " + repairLine[1] + " " + (timesRepaired + 1);
-                                                                if (result != null) {
-                                                                    if (result.getItemMeta() != null) {
-                                                                        ItemMeta resultMeta = result.getItemMeta();
-                                                                        if (resultMeta.hasLore()) {
-                                                                            List<String> resultLore =
-                                                                                    resultMeta.getLore();
-                                                                            resultLore.set(resultLore.size() - 1,
-                                                                                           newRepairLine);
-                                                                            resultMeta.setLore(resultLore);
-                                                                            result.setItemMeta(resultMeta);
-
-                                                                            if (event.getCursor() == null || event.getCursor().getType() == Material.AIR) {
-
-                                                                                if (player.getLevel() >= 50) {
-                                                                                    xpTake50 = true; //Tells later
-                                                                                    // code to execute repair and
-                                                                                    // take 50 xp
-                                                                                } else {
-                                                                                    player.sendMessage(ChatColor.RED + "You must be at least level 50 to repair this item.");
-                                                                                    player.playSound(location,
-                                                                                                     Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1f, 1f);
-                                                                                    notEnoughXPMessage = true;
-                                                                                }
-                                                                            }
-                                                                        }
-                                                                    }
-                                                                }
-                                                            } else {
-                                                                player.sendMessage(ChatColor.RED + "You cannot repair" +
-                                                                                           " God items more than 4 " +
-                                                                                           "times.");
-                                                                player.playSound(location,
-                                                                                 Sound.BLOCK_ENCHANTMENT_TABLE_USE,
-                                                                                 1f, 1f);
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-
-                                    //Rename
-                                    if (!applyingEnchants) {
-
-                                        if (player.hasPermission("customgod.forge.rename")) {
-                                            if (input != null && input.getType() != Material.AIR) {
-                                                if (input.getItemMeta() != null) {
-                                                    if (result != null) {
-                                                        if (result.getItemMeta() != null) {
-                                                            ItemMeta resultMeta = result.getItemMeta();
-                                                            if (GodItems.isLegendary(input)) {
-                                                                resultMeta.setDisplayName(ChatColor.RED + "" + ChatColor.BOLD + newName);
-                                                            } else {
-                                                                resultMeta.setDisplayName(ChatColor.RED + newName);
-                                                            }
-                                                            result.setItemMeta(resultMeta);
-
-                                                            //If repairing
-                                                            if (addition != null) {
-                                                                if (hasRepair(Bukkit.getOfflinePlayer(player.getName()))) {
-                                                                    if (xpTake30) {
-                                                                        if (player.getLevel() >= 30) {
-                                                                            event.setCursor(result);
-                                                                            anvil.setItem(0, null);
-                                                                            anvil.setItem(1, null);
-                                                                            anvil.setItem(2, null);
-                                                                            player.sendMessage(ChatColor.GREEN +
-                                                                                                       "Successfully " +
-                                                                                                       "repaired " + newName + ".");
-                                                                            player.playSound(location,
-                                                                                             Sound.ENTITY_ENDER_EYE_DEATH, 1f, 1f);
-                                                                            player.setLevel(originalXP - 30);
-                                                                        }
-                                                                    } else if (xpTake50) {
-                                                                        if (player.getLevel() >= 50) {
-                                                                            event.setCursor(result);
-                                                                            anvil.setItem(0, null);
-                                                                            anvil.setItem(1, null);
-                                                                            anvil.setItem(2, null);
-                                                                            player.sendMessage(ChatColor.GREEN +
-                                                                                                       "Successfully " +
-                                                                                                       "repaired " + newName + ".");
-                                                                            player.playSound(location,
-                                                                                             Sound.ENTITY_ENDER_EYE_DEATH, 1f, 1f);
-                                                                            player.setLevel(originalXP - 50);
-                                                                        }
-                                                                    }
-                                                                    FileConfiguration config =
-                                                                            CustomGod.getInstance().getConfig();
-                                                                    config.set("repairs." + Bukkit.getOfflinePlayer(player.getName()).getUniqueId(), config.getInt("repairs." + player.getUniqueId()) - 1);
-                                                                    plugin.saveConfig();
-                                                                } else {
-                                                                    player.sendMessage(ChatColor.RED + "Your God " +
-                                                                                               "Repair is not ready " +
-                                                                                               "to use yet.");
-                                                                    player.playSound(location,
-                                                                                     Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1f, 1f);
-                                                                    return;
-                                                                }
-                                                            }
-
-                                                            //If just renaming
-                                                            else {
-                                                                if (player.getLevel() >= 30) {
-                                                                    event.setCursor(result);
-                                                                    anvil.setItem(0, null);
-                                                                    anvil.setItem(1, null);
-                                                                    anvil.setItem(2, null);
-                                                                    player.sendMessage(ChatColor.GREEN +
-                                                                                               "Successfully renamed "
-                                                                                               + newName + ".");
-                                                                    player.playSound(location,
-                                                                                     Sound.ENTITY_ENDER_EYE_DEATH, 1f
-                                                                            , 1f);
-                                                                    player.setLevel(originalXP - 30);
-                                                                } else {
-                                                                    if (!notEnoughXPMessage) {
-                                                                        player.sendMessage(ChatColor.RED + "You must " +
-                                                                                                   "be at least level" +
-                                                                                                   " 30 to rename " +
-                                                                                                   "this item.");
-                                                                        player.playSound(location,
-                                                                                         Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1f, 1f);
-                                                                    }
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        } else {
-                                            player.sendMessage(ChatColor.RED + "You must be at least diamond rank to " +
-                                                                       "rename God items.");
-                                            player.playSound(location, Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1f, 1f);
-                                        }
-                                    }
-                                } else {
-                                    player.sendMessage(ChatColor.RED + "You can only rename/repair God items.");
-                                    player.playSound(location, Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1f, 1f);
-                                }
-                            }
-                        }
-                    }, 1);
-                }
-            }
-
-            //Regular anvils
-            else {
-                if (event.getInventory() instanceof AnvilInventory) {
-                    ItemStack cursor = event.getCursor();
-                    ItemStack currentItem = event.getCurrentItem();
-
-                    if (currentItem != null) {
-                        if (GodItems.isGod(currentItem)) {
-                            event.getWhoClicked().sendMessage(ChatColor.RED + "You can only use God items in the God " +
-                                                                      "Forge at /warp GodForge.");
-                            event.setCancelled(true);
-                        }
-                    }
-
-                    if (cursor != null) {
-                        if (GodItems.isGod(currentItem)) {
-                            event.getWhoClicked().sendMessage(ChatColor.RED + "You can only use God items in the God " +
-                                                                      "Forge at /warp GodForge.");
-                            event.setCancelled(true);
-                        }
-                    }
-
-                    if (event.getClick().equals(ClickType.NUMBER_KEY)) {
-                        event.setCancelled(true);
-                    }
-                }
-            }
+    public void onBlockInteract(PlayerInteractEvent event) {
+        if (event.getClickedBlock() == null) {
+            return;
         }
-    }
-
-    private static boolean hasRepair(OfflinePlayer offlinePlayer) {
-        FileConfiguration config = CustomGod.getInstance().getConfig();
-        if (config.get("repairs." + offlinePlayer.getUniqueId()) == null) {
-            return false;
-        } else {
-            if (config.getInt("repairs." + offlinePlayer.getUniqueId()) > 0) {
-                return true;
-            } else {
-                return false;
-            }
+        if (!event.getClickedBlock().getType().equals(Material.ANVIL)) {
+            return;
         }
-    }
+        if (event.getHand() == EquipmentSlot.OFF_HAND) { //Event is fires twice, one for each hand, this if statement catches the off hand and stops the event
+            return;
+        }
 
-    @SuppressWarnings("deprecation")
-    @EventHandler
-    public void onClickEvent(PlayerInteractEvent event) {
-        if (event.getClickedBlock() != null) {
-            if (event.getClickedBlock().getType().equals(Material.ANVIL)) {
-                Player player = event.getPlayer();
-                Location location = player.getLocation();
-                double x = location.getX();
-                double y = location.getY();
-                double z = location.getZ();
-                if ((x > 43 && x < 63) && (y > 208 && y < 228) && (z > 205 && z < 225)) {
-                    Block b = event.getClickedBlock();
-                    b.setType(Material.ANVIL); //Repairs anvil
-                    if (!player.hasPermission("customgod.forge.use")) {
-                        event.setCancelled(true);
-                        player.sendMessage(ChatColor.RED + "You cannot use the God Forge.");
+        Location location = event.getClickedBlock().getLocation();
+        double x = location.getX();
+        double y = location.getY();
+        double z = location.getZ();
+        if ((x > 43 && x < 63) && (y > 208 && y < 228) && (z > 205 && z < 225)) { //cords of God Forge
+            event.setCancelled(true);
+            Player player = event.getPlayer();
+            PlayerInventory inventory = player.getInventory();
+            if (inventory.getItemInMainHand() == null || inventory.getItemInOffHand() == null) {
+                player.sendMessage(ChatColor.RED + "To use the God Forge, hold a God item in your main hand. Hold dragon eggs, a nametag, or Reforging Steel in your off hand.");
+                player.playSound(location, Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1f, 1f);
+                return;
+            }
+            if (!GodItems.isGod(player.getInventory().getItemInMainHand())) {
+                player.sendMessage(ChatColor.RED + "To use the God Forge, hold a God item in your main hand. Hold dragon eggs, a nametag, or Reforging Steel in your off hand.");
+                player.playSound(location, Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1f, 1f);
+                return;
+            }
+            if (GodItems.isUnique(player.getInventory().getItemInMainHand())) {
+                player.sendMessage(ChatColor.RED + "You cannot rename unique items or repair them at the God Forge.");
+                player.playSound(location, Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1f, 1f);
+                return;
+            }
+            if (player.getLevel() < 30) {
+                player.sendMessage(ChatColor.RED + "You must be at least level 30 to use the God Forge.");
+                player.playSound(location, Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1f, 1f);
+                return;
+            }
+
+            ItemStack godItem = inventory.getItemInMainHand();
+            ItemMeta itemMeta = godItem.getItemMeta();
+
+            //Repairing wtih deggs
+            if (inventory.getItemInOffHand().getType().equals(Material.DRAGON_EGG)) {
+                List<String> lore = itemMeta.getLore();
+                String[] repairLine = lore.get(lore.size() - 1).split("\\s"); //Get "Times repaired: x" line of lore
+                if (Arrays.asList(repairLine).contains("repaired:")) { //If repairable, it will have "Times repaired:" line
+                    Damageable damagableMeta = (Damageable) itemMeta; //If repairable, it will be damagable
+                    int timesRepaired = Integer.parseInt(repairLine[2]);
+                    int deggsNeeded = timesRepaired * 3;
+                    if (deggsNeeded < 5) deggsNeeded = 5; //First repair
+                    if (inventory.getItemInOffHand().getAmount() < deggsNeeded) {
+                        player.sendMessage(ChatColor.RED + "You need " + deggsNeeded + " dragon eggs to repair " + itemMeta.getDisplayName() + ChatColor.RED + ".");
                         player.playSound(location, Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1f, 1f);
+                        return;
+                    }
+                    else {
+                        inventory.getItemInOffHand().setAmount(inventory.getItemInOffHand().getAmount() - deggsNeeded);
+                        damagableMeta.setDamage(0); //Repair item
+                        player.setLevel(player.getLevel() - 30);
+                        //Adding 1 to Times repaired
+                        String newRepairLine = ChatColor.GRAY + "Times repaired: " + (timesRepaired + 1);
+                        List<String> godLore = damagableMeta.getLore();
+                        godLore.set(lore.size() - 1, newRepairLine);
+                        damagableMeta.setLore(godLore);
+                        godItem.setItemMeta(damagableMeta);
+                        Bukkit.getServer().broadcastMessage(ChatColor.RED + "[God Forge] " + ChatColor.BLUE + player.getName() + " has repaired " + damagableMeta.getDisplayName() + ChatColor.BLUE + " for " + ChatColor.BOLD + deggsNeeded + ChatColor.BLUE + " dragon eggs!");
+                        player.playSound(location, Sound.ENTITY_ENDER_EYE_DEATH, 1f, 1f);
+                        return;
                     }
                 }
+                else {
+                    player.sendMessage(ChatColor.RED + "This item can not be repaired.");
+                    player.playSound(location, Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1f, 1f);
+                    return;
+                }
+            }
+
+            //Repairing with reforging steel
+            if (inventory.getItemInOffHand().getType().equals(Material.NETHERITE_INGOT)) {
+                if (inventory.getItemInOffHand().getItemMeta().hasLore()) {
+                    if (inventory.getItemInOffHand().getLore().contains(ChatColor.of("#872B2B") + "Repairs a God item")) {
+                        List<String> lore = itemMeta.getLore();
+                        String[] repairLine = lore.get(lore.size() - 1).split("\\s"); //Get "Times repaired: x" line of lore
+                        if (Arrays.asList(repairLine).contains("repaired:")) { //If repairable, it will have "Times repaired:" line
+
+                            Damageable damagableMeta = (Damageable) itemMeta; //If repairable, it will be damagable
+                            int timesRepaired = Integer.parseInt(repairLine[2]);
+
+                            inventory.getItemInOffHand().setAmount(inventory.getItemInOffHand().getAmount() - 1);
+                            damagableMeta.setDamage(0); //Repair item
+                            player.setLevel(player.getLevel() - 30);
+
+                            //Adding 1 to Times repaired
+                            String newRepairLine = ChatColor.GRAY + "Times repaired: " + (timesRepaired + 1);
+                            List<String> godLore = damagableMeta.getLore();
+                            godLore.set(lore.size() - 1, newRepairLine);
+                            damagableMeta.setLore(godLore);
+                            godItem.setItemMeta(damagableMeta);
+                            Bukkit.getServer().broadcastMessage(ChatColor.RED + "[God Forge] " + ChatColor.BLUE + player.getName() + " has repaired " + damagableMeta.getDisplayName() + ChatColor.BLUE + " using " + ChatColor.BOLD + "Reforging Steel" + ChatColor.BLUE + "!");
+                            player.playSound(location, Sound.ENTITY_ENDER_EYE_DEATH, 1f, 1f);
+                            return;
+                        }
+                        else {
+                            player.sendMessage(ChatColor.RED + "This item can not be repaired.");
+                            player.playSound(location, Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1f, 1f);
+                            return;
+                        }
+                    }
+                }
+            }
+
+            //Renaming
+            else if (inventory.getItemInOffHand().getType().equals(Material.NAME_TAG)) {
+                if (!player.hasPermission("gforge.rename")) {
+                    player.sendMessage(ChatColor.RED + "You must be at least Diamond rank to rename God items. Use /buy to see all premium features.");
+                    player.playSound(location, Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1f, 1f);
+                    return;
+                }
+
+                String newName = inventory.getItemInOffHand().getItemMeta().getDisplayName();
+                String godPrefix = ""; //The &c prefix color code
+                String godName = "";
+
+
+                if (itemMeta.getDisplayName().length() >=4) {
+                    if (itemMeta.getDisplayName().contains(ChatColor.COLOR_CHAR + "l")) {
+                        godPrefix = itemMeta.getDisplayName().substring(0, 2) + ChatColor.COLOR_CHAR + "l"; //&c&l //Not sure why it's (0, 2) and not (0,1) but it works so fuck it
+                    }
+                    else {
+                        godPrefix = itemMeta.getDisplayName().substring(0, 2); //&c
+                    }
+                }
+                else {
+                    godPrefix = itemMeta.getDisplayName().substring(0, 2); //&c
+                }
+
+                if (godPrefix.length() == 4) { //&c&l
+                    godName = getChatColor(godPrefix.substring(0, 2)) + "" + ChatColor.BOLD + newName;
+                }
+                else { //&c
+                  godName = getChatColor(godPrefix) + newName;
+                }
+
+                itemMeta.setDisplayName(godName);
+                godItem.setItemMeta(itemMeta);
+                player.setLevel(player.getLevel() - 30);
+                inventory.getItemInOffHand().setAmount(inventory.getItemInOffHand().getAmount() - 1);
+                Bukkit.getServer().broadcastMessage(ChatColor.RED + "[God Forge] " + ChatColor.BLUE + player.getName() + " has named their God item " + godName + ChatColor.BLUE + "!");
+                player.playSound(location, Sound.ENTITY_ENDER_EYE_DEATH, 1f, 1f);
+            }
+            else {
+                player.sendMessage(ChatColor.RED + "To use the God Forge, hold a God item in your main hand. Hold dragon eggs, a nametag, or Reforging Steel in your off hand.");
+                player.playSound(location, Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1f, 1f);
             }
         }
     }
 
+    public String getChatColor(String colorCode) {
+        switch (colorCode) {
+            case (ChatColor.COLOR_CHAR + "c"):
+                return ChatColor.RED + "";
+            case (ChatColor.COLOR_CHAR + "a"):
+                return ChatColor.GREEN + "";
+            case (ChatColor.COLOR_CHAR + "6"):
+                return ChatColor.GOLD + "";
+            case (ChatColor.COLOR_CHAR + "c" + ChatColor.COLOR_CHAR + "l"):
+                return ChatColor.RED + "" + ChatColor.BOLD;
+            case (ChatColor.COLOR_CHAR + "a" + ChatColor.COLOR_CHAR + "l"):
+                return ChatColor.GREEN + "" + ChatColor.BOLD;
+            case (ChatColor.COLOR_CHAR + "6" + ChatColor.COLOR_CHAR + "l"):
+                return ChatColor.GOLD + "" + ChatColor.BOLD;
+            default:
+                return null;
+        }
+    }
 }

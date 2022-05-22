@@ -1,18 +1,18 @@
 name: CustomGod
 main: me.vaape.customgod.CustomGod
 version: 1.0
-api-version: 1.17
+api-version: 1.18
 depend: [ArmorEquipEvent, WorldGuard]
 commands:
   givegod:
-    description: Gives all god items
-  giverepair:
-    description: Adds a god repair to a player
-  removerepair:
-    description: Removes a player from the God repair list in config
-  grepair:
-    description: Checks the status of your God Repair
-  godrepair:
-    description: Checks the status of your God Repair
-  refreshrepairs:
-    description: Refreshes all god repairs
+    description: Gives god items
+    permission: customgod.givegod
+  givesnowy:
+    description: Gives snowy items
+    permission: customgod.givesnowy
+  giveval:
+    description: Gives val items
+    permission: customgod.giveval
+  giveeaster:
+    description: Gives val items
+    permission: customgod.giveeaster

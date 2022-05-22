@@ -106,10 +106,129 @@ public class ArmorListener implements Listener{
 	
 	@EventHandler(priority =  EventPriority.HIGHEST)
 	public void playerInteractEvent(PlayerInteractEvent e){
+		boolean shift = false;
+		if (e.getPlayer().isSneaking()) shift = true;
 		if(e.useItemInHand().equals(Result.DENY))return;
 		//
 		if(e.getAction() == Action.PHYSICAL) return;
 		if(e.getAction() == Action.RIGHT_CLICK_AIR || e.getAction() == Action.RIGHT_CLICK_BLOCK){
+			if (e.getClickedBlock() != null) {
+				Material blockType = e.getClickedBlock().getType();
+				if (!shift && (blockType.equals(Material.CRAFTING_TABLE) ||
+					blockType.equals(Material.CHEST) ||
+					blockType.equals(Material.ENDER_CHEST) ||
+					blockType.equals(Material.LOOM) ||
+					blockType.equals(Material.WATER_CAULDRON) ||
+					blockType.equals(Material.DROPPER) ||
+					blockType.equals(Material.DISPENSER) ||
+					blockType.equals(Material.HOPPER) ||
+					blockType.equals(Material.SMITHING_TABLE) ||
+					blockType.equals(Material.JUKEBOX) ||
+					blockType.equals(Material.FURNACE) ||
+					blockType.equals(Material.CHIPPED_ANVIL) ||
+					blockType.equals(Material.DAMAGED_ANVIL) ||
+					blockType.equals(Material.ENCHANTING_TABLE) ||
+					blockType.equals(Material.NOTE_BLOCK) ||
+					blockType.equals(Material.SHULKER_BOX) ||
+					blockType.equals(Material.LODESTONE) ||
+					blockType.equals(Material.RESPAWN_ANCHOR) ||
+					blockType.equals(Material.BLACK_SHULKER_BOX) ||
+					blockType.equals(Material.BLUE_SHULKER_BOX) ||
+					blockType.equals(Material.BROWN_SHULKER_BOX) ||
+					blockType.equals(Material.CYAN_SHULKER_BOX) ||
+					blockType.equals(Material.GRAY_SHULKER_BOX) ||
+					blockType.equals(Material.GREEN_SHULKER_BOX) ||
+					blockType.equals(Material.LIGHT_BLUE_SHULKER_BOX) ||
+					blockType.equals(Material.LIGHT_GRAY_SHULKER_BOX) ||
+					blockType.equals(Material.LIME_SHULKER_BOX) ||
+					blockType.equals(Material.MAGENTA_SHULKER_BOX) ||
+					blockType.equals(Material.ORANGE_SHULKER_BOX) ||
+					blockType.equals(Material.PINK_SHULKER_BOX) ||
+					blockType.equals(Material.PURPLE_SHULKER_BOX) ||
+					blockType.equals(Material.RED_SHULKER_BOX) ||
+					blockType.equals(Material.YELLOW_SHULKER_BOX) ||
+					blockType.equals(Material.WHITE_SHULKER_BOX) ||
+					blockType.equals(Material.BLACK_BED) ||
+					blockType.equals(Material.BLUE_BED) ||
+					blockType.equals(Material.BROWN_BED) ||
+					blockType.equals(Material.CYAN_BED) ||
+					blockType.equals(Material.GRAY_BED) ||
+					blockType.equals(Material.GREEN_BED) ||
+					blockType.equals(Material.LIGHT_BLUE_BED) ||
+					blockType.equals(Material.LIGHT_GRAY_BED) ||
+					blockType.equals(Material.LIME_BED) ||
+					blockType.equals(Material.MAGENTA_BED) ||
+					blockType.equals(Material.ORANGE_BED) ||
+					blockType.equals(Material.PINK_BED) ||
+					blockType.equals(Material.PURPLE_BED) ||
+					blockType.equals(Material.RED_BED) ||
+					blockType.equals(Material.YELLOW_BED) ||
+					blockType.equals(Material.WHITE_BED) ||
+					blockType.equals(Material.GRINDSTONE) ||
+					blockType.equals(Material.BARREL) ||
+					blockType.equals(Material.BLAST_FURNACE) ||
+					blockType.equals(Material.SMOKER) ||
+					blockType.equals(Material.FLETCHING_TABLE) ||
+					blockType.equals(Material.CARTOGRAPHY_TABLE) ||
+					blockType.equals(Material.ACACIA_BUTTON) ||
+					blockType.equals(Material.BIRCH_BUTTON) ||
+					blockType.equals(Material.CRIMSON_BUTTON) ||
+					blockType.equals(Material.JUNGLE_BUTTON) ||
+					blockType.equals(Material.DARK_OAK_BUTTON) ||
+					blockType.equals(Material.OAK_BUTTON) ||
+					blockType.equals(Material.POLISHED_BLACKSTONE_BUTTON) ||
+					blockType.equals(Material.SPRUCE_BUTTON) ||
+					blockType.equals(Material.STONE_BUTTON) ||
+					blockType.equals(Material.WARPED_BUTTON) ||
+					blockType.equals(Material.REPEATER) ||
+					blockType.equals(Material.COMPARATOR) ||
+					blockType.equals(Material.LEVER) ||
+					blockType.equals(Material.DARK_OAK_DOOR) ||
+					blockType.equals(Material.ACACIA_DOOR) ||
+					blockType.equals(Material.BIRCH_DOOR) ||
+					blockType.equals(Material.CRIMSON_DOOR) ||
+					blockType.equals(Material.JUNGLE_DOOR) ||
+					blockType.equals(Material.OAK_DOOR) ||
+					blockType.equals(Material.SPRUCE_DOOR) ||
+					blockType.equals(Material.WARPED_DOOR) ||
+					blockType.equals(Material.DARK_OAK_TRAPDOOR) ||
+					blockType.equals(Material.ACACIA_TRAPDOOR) ||
+					blockType.equals(Material.BIRCH_TRAPDOOR) ||
+					blockType.equals(Material.CRIMSON_TRAPDOOR) ||
+					blockType.equals(Material.JUNGLE_TRAPDOOR) ||
+					blockType.equals(Material.OAK_TRAPDOOR) ||
+					blockType.equals(Material.SPRUCE_TRAPDOOR) ||
+					blockType.equals(Material.WARPED_TRAPDOOR) ||
+					blockType.equals(Material.ACACIA_FENCE_GATE) ||
+					blockType.equals(Material.BIRCH_FENCE_GATE) ||
+					blockType.equals(Material.CRIMSON_FENCE_GATE) ||
+					blockType.equals(Material.DARK_OAK_FENCE_GATE) ||
+					blockType.equals(Material.JUNGLE_FENCE_GATE) ||
+					blockType.equals(Material.OAK_FENCE_GATE) ||
+					blockType.equals(Material.SPRUCE_FENCE_GATE) ||
+					blockType.equals(Material.WARPED_FENCE_GATE) ||
+					blockType.equals(Material.CAKE) ||
+					blockType.equals(Material.CANDLE_CAKE) ||
+					blockType.equals(Material.BLACK_CANDLE_CAKE) ||
+					blockType.equals(Material.BLUE_CANDLE_CAKE) ||
+					blockType.equals(Material.CYAN_CANDLE_CAKE) ||
+					blockType.equals(Material.BROWN_CANDLE_CAKE) ||
+					blockType.equals(Material.GRAY_CANDLE_CAKE) ||
+					blockType.equals(Material.GREEN_CANDLE_CAKE) ||
+					blockType.equals(Material.LIGHT_BLUE_CANDLE_CAKE) ||
+					blockType.equals(Material.LIGHT_GRAY_CANDLE_CAKE) ||
+					blockType.equals(Material.LIME_CANDLE_CAKE) ||
+					blockType.equals(Material.MAGENTA_CANDLE_CAKE) ||
+					blockType.equals(Material.ORANGE_CANDLE_CAKE) ||
+					blockType.equals(Material.PINK_CANDLE_CAKE) ||
+					blockType.equals(Material.PURPLE_CANDLE_CAKE) ||
+					blockType.equals(Material.RED_CANDLE_CAKE) ||
+					blockType.equals(Material.WHITE_CANDLE_CAKE) ||
+					blockType.equals(Material.YELLOW_CANDLE_CAKE))
+				) {
+					return;
+				}
+			}
 			Player player = e.getPlayer();
 			if(!e.useInteractedBlock().equals(Result.DENY)){
 				if(e.getClickedBlock() != null && e.getAction() == Action.RIGHT_CLICK_BLOCK && !player.isSneaking()){// Having both of these checks is useless, might as well do it though.

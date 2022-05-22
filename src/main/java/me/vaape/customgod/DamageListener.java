@@ -47,13 +47,6 @@ public class DamageListener implements Listener {
 
     WorldGuardPlugin worldGuard = getWorldGuard();
 
-    private HashMap<UUID, Integer> pearlCooldown = new HashMap<UUID, Integer>();
-    private HashMap<UUID, BukkitRunnable> pearlCooldownTask = new HashMap<UUID, BukkitRunnable>();
-    private HashMap<UUID, Integer> caneCooldown = new HashMap<UUID, Integer>();
-    private HashMap<UUID, BukkitRunnable> caneCooldownTask = new HashMap<UUID, BukkitRunnable>();
-    private HashMap<UUID, Integer> mjolnirCooldown = new HashMap<UUID, Integer>();
-    private HashMap<UUID, BukkitRunnable> mjolnirCooldownTask = new HashMap<UUID, BukkitRunnable>();
-
     private WorldGuardPlugin getWorldGuard() {
         Plugin worldGuardPlugin = Bukkit.getServer().getPluginManager().getPlugin("WorldGuard");
 
@@ -87,16 +80,22 @@ public class DamageListener implements Listener {
             }
         }
 
-        if (attacker instanceof Player && defender instanceof LivingEntity) {
+        if (attacker instanceof Player player && defender instanceof LivingEntity livingDefender) {
 
-            Player player = (Player) event.getDamager();
-            LivingEntity livingDefender = (LivingEntity) defender;
             ItemStack hand = player.getInventory().getItemInMainHand();
 
             if (hand.getType() != Material.AIR) {
 
+                if (GodItems.isUnique(hand) && hand.getType() == Material.GOLDEN_SWORD) {
+                    livingDefender.addPotionEffect(new PotionEffect(PotionEffectType.BAD_OMEN, 3 * 20, 0), true);
+                    livingDefender.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 3 * 20, 1), true);
+                    livingDefender.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 3 * 20, 0), true);
+                    livingDefender.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_DIGGING, 3 * 20, 0), true);
+                    livingDefender.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 3 * 20, 0), true);
+                }
+
                 if (GodItems.isGod(hand)) {
-                    if (GodItems.getGodName(hand).equalsIgnoreCase("shadow's edge")) {
+                    if (GodItems.getGodName(hand).equalsIgnoreCase("Shadow's Edge")) {
 
                         if (hand.getLore().contains(ChatColor.AQUA + "- Weakens the enemy")) { //Old Shadow's edge
                             // before reward will have this, reworked one will not
@@ -107,15 +106,15 @@ public class DamageListener implements Listener {
                             // before reward will have this, reworked one will not
                             livingDefender.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 4 * 20, 1), true);
                         }
-                    } else if (GodItems.getGodName(hand).equalsIgnoreCase("anduril")) {
+                    } else if (GodItems.getGodName(hand).equalsIgnoreCase("Anduril")) {
                         livingDefender.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 3 * 20, 0), true);
-                    } else if (GodItems.getGodName(hand).equalsIgnoreCase("kamatayan")) {
+                    } else if (GodItems.getGodName(hand).equalsIgnoreCase("Kamatayon")) {
                         livingDefender.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 4 * 20, 0), true);
                         livingDefender.addPotionEffect(new PotionEffect(PotionEffectType.CONFUSION, 4 * 20, 2), true);
                         if (!isRoyalty(livingDefender)) {
                             livingDefender.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 5 * 20, 4), true);
                         }
-                    } else if (GodItems.getGodName(hand).equalsIgnoreCase("shadow seeker")) {
+                    } else if (GodItems.getGodName(hand).equalsIgnoreCase("Shadow Seeker")) {
                         UUID UUID = livingDefender.getUniqueId();
 
                         //If Bukkit.getPlauer(UUID) == null it's an animal and gives an NPE
@@ -123,30 +122,10 @@ public class DamageListener implements Listener {
                             return;
                         }
 
-                        if (pearlCooldown.containsKey(UUID)) { //If already on cooldown
-                            pearlCooldown.remove(UUID);
-                            pearlCooldownTask.get(UUID).cancel(); //Cancel original task
-                            pearlCooldownTask.remove(UUID);
-                        }
+                        Bukkit.getPlayer(UUID).setCooldown(Material.ENDER_PEARL, 10 * 20);
 
-                        pearlCooldown.put(UUID, 10);
-                        pearlCooldownTask.put(UUID, new BukkitRunnable() {
-
-                            @Override
-                            public void run() {
-                                pearlCooldown.put(UUID, pearlCooldown.get(UUID) - 1); //Lower cooldown by 1 second
-                                if (pearlCooldown.get(UUID) == 0) {
-                                    pearlCooldown.remove(UUID);
-                                    pearlCooldownTask.remove(UUID);
-                                    Bukkit.getPlayer(UUID).sendMessage(ChatColor.GREEN + "Pearl binding expired");
-                                    cancel();
-                                } else {
-                                    Bukkit.getPlayer(UUID).sendMessage(ChatColor.RED + "" + pearlCooldown.get(UUID) + " seconds of pearl cooldown remaining");
-                                }
-                            }
-                        });
-
-                        pearlCooldownTask.get(UUID).runTaskTimer(CustomGod.getInstance(), 20, 20);
+                    } else if (GodItems.getGodName(hand).equalsIgnoreCase("Glacial Brand")) {
+                        livingDefender.setFreezeTicks(50);
                     }
                 }
             }
@@ -156,9 +135,9 @@ public class DamageListener implements Listener {
             Arrow arrow = (Arrow) attacker;
             LivingEntity livingDefender = (LivingEntity) defender;
             if (arrow.getCustomName() != null) {
-                if (arrow.getCustomName().contains("medusa")) {
+                if (arrow.getCustomName().contains("Medusa")) {
                     livingDefender.addPotionEffect(new PotionEffect(PotionEffectType.POISON, 4 * 20, 3), true);
-                } else if (arrow.getCustomName().contains("glacial bow")) {
+                } else if (arrow.getCustomName().contains("Glacial Bow")) {
 
                     org.bukkit.Location location = defender.getLocation();
 
@@ -185,7 +164,7 @@ public class DamageListener implements Listener {
         if (event.getEntity() instanceof Arrow arrow) {
             if (arrow.getCustomName() != null) {
 
-                if (arrow.getCustomName().equals("glacial bow")) {
+                if (arrow.getCustomName().equals("Glacial Bow")) {
 
                     org.bukkit.Location location = event.getEntity().getLocation();
 
@@ -238,12 +217,18 @@ public class DamageListener implements Listener {
 
             if (hand != null && hand.getType() != Material.AIR) {
                 if (GodItems.isGod(hand)) {
-                    if (GodItems.getGodName(hand).equalsIgnoreCase("cane of zefeus")) {
+                    if (GodItems.getGodName(hand).equalsIgnoreCase("Cane of Zefeus")) {
 
-                        if (caneCooldown.containsKey(UUID)) { //If on cooldown
-                            Bukkit.getPlayer(UUID).sendMessage(ChatColor.RED + "You can't use this for " + caneCooldown.get(UUID) + " more seconds");
+                        if (player.hasCooldown(Material.BLAZE_ROD)) {
+                            Bukkit.getPlayer(UUID).sendMessage(ChatColor.RED + "Your cane is still on cooldown.");
                             return;
                         }
+
+                        if (player.getLevel() < 3) {
+                            Bukkit.getPlayer(UUID).sendMessage(ChatColor.RED + "You need 3 experience levels to use your cane...");
+                            return;
+                        }
+                        player.setLevel(player.getLevel() - 3);
 
                         PlayerInventory inventory = entity.getInventory();
                         ItemStack[] contents = inventory.getContents();
@@ -262,24 +247,7 @@ public class DamageListener implements Listener {
                         entity.sendMessage(ChatColor.of("#9932d1") + "You have been struck by " + player.getName() +
                                                    "'s Cane...");
 
-                        //Cooldown
-                        caneCooldown.put(UUID, 30); //30 second cooldown
-                        caneCooldownTask.put(UUID, new BukkitRunnable() {
-
-                            @Override
-                            public void run() {
-                                caneCooldown.put(UUID, caneCooldown.get(UUID) - 1); //Lower cooldown by 1 second
-                                if (caneCooldown.get(UUID) == 0) {
-                                    caneCooldown.remove(UUID);
-                                    caneCooldownTask.remove(UUID);
-                                    Bukkit.getPlayer(UUID).sendMessage(ChatColor.GREEN + "Cane cooldown expired");
-                                    cancel();
-                                }
-                            }
-                        });
-
-                        caneCooldownTask.get(UUID).runTaskTimer(CustomGod.getInstance(), 20, 20);
-
+                        player.setCooldown(Material.BLAZE_ROD, 30 * 20);
                     }
                 }
             }
@@ -303,39 +271,15 @@ public class DamageListener implements Listener {
             if (hand.getType() != Material.AIR) {
                 if (GodItems.isGod(hand)) {
 
-                    if (GodItems.getGodName(hand).equalsIgnoreCase("mjolnir")) {
+                    if (GodItems.getGodName(hand).equalsIgnoreCase("Mjolnir")) {
 
-                        UUID UUID = player.getUniqueId();
-                        //If on cooldown
-                        if (mjolnirCooldown.containsKey(UUID)) {
-                            player.sendMessage(ChatColor.RED + "You can't use this for " + mjolnirCooldown.get(UUID) + " more seconds");
-                        } else {
+                        if (player.hasCooldown(Material.IRON_AXE)) player.sendMessage(ChatColor.RED + "You can't use lightning strike yet.");
+                        else {
                             Bukkit.getServer().getWorld("world").strikeLightning(event.getClickedBlock().getLocation());
-
                             Damageable handMeta = (Damageable) hand.getItemMeta();
                             handMeta.setDamage(handMeta.getDamage() + 1);
                             hand.setItemMeta(handMeta);
-
-                            //Cooldown
-                            mjolnirCooldown.put(UUID, 10);
-                            mjolnirCooldownTask.put(UUID, new BukkitRunnable() {
-
-                                @Override
-                                public void run() {
-                                    mjolnirCooldown.put(UUID, mjolnirCooldown.get(UUID) - 1); //Lower cooldown by 1
-                                    // second
-                                    if (mjolnirCooldown.get(UUID) == 0) {
-                                        mjolnirCooldown.remove(UUID);
-                                        mjolnirCooldownTask.remove(UUID);
-                                        Bukkit.getPlayer(UUID).sendMessage(ChatColor.GREEN + "Lightning strike " +
-                                                                                   "cooldown expired");
-                                        cancel();
-                                    }
-                                }
-                            });
-
-                            mjolnirCooldownTask.get(UUID).runTaskTimer(CustomGod.getInstance(), 20, 20);
-                            return;
+                            player.setCooldown(Material.IRON_AXE, 30 * 20);
                         }
                     }
                 }
@@ -365,7 +309,7 @@ public class DamageListener implements Listener {
                 }
             }
 
-            event.setDamage(event.getDamage() * 5);
+            event.setDamage(event.getDamage() * 1);
 
             if (event.getEntity() instanceof Player) {
                 Player player = (Player) event.getEntity();
@@ -375,15 +319,15 @@ public class DamageListener implements Listener {
                 ItemStack mainHand = player.getInventory().getItemInMainHand();
                 if (mainHand != null && mainHand.getType() != Material.AIR) {
                     if (GodItems.isGod(mainHand)) {
-                        if (GodItems.getGodName(mainHand).equalsIgnoreCase("mjolnir")) {
+                        if (GodItems.getGodName(mainHand).equalsIgnoreCase("Mjolnir")) {
                             event.setCancelled(true);
                         }
                     }
                 }
-                ItemStack offHand = player.getInventory().getItemInMainHand();
+                ItemStack offHand = player.getInventory().getItemInOffHand();
                 if (offHand != null && offHand.getType() != Material.AIR) {
                     if (GodItems.isGod(offHand)) {
-                        if (GodItems.getGodName(offHand).equalsIgnoreCase("mjolnir")) {
+                        if (GodItems.getGodName(offHand).equalsIgnoreCase("Mjolnir")) {
                             event.setCancelled(true);
                         }
                     }
@@ -408,25 +352,29 @@ public class DamageListener implements Listener {
         ItemStack bow = event.getBow();
         if (GodItems.isGod(bow)) {
             if (bow.hasItemMeta()) {
-                if (GodItems.getGodName(bow).equalsIgnoreCase("medusa")) {
-                    event.getProjectile().setCustomName("medusa");
-                } else if (GodItems.getGodName(bow).equalsIgnoreCase("glacial bow")) {
-                    event.getProjectile().setCustomName("glacial bow");
+                if (GodItems.getGodName(bow).equalsIgnoreCase("Medusa")) {
+                    event.getProjectile().setCustomName("Medusa");
+                } else if (GodItems.getGodName(bow).equalsIgnoreCase("Glacial Bow")) {
+                    event.getProjectile().setCustomName("Glacial Bow");
                 }
             }
         }
     }
 
-    //Enderpearl Cooldown if hit with Shadow Seeker
+    //Disable the vanilla default enderpearl cooldown
     @EventHandler
     public void onPearl(PlayerLaunchProjectileEvent event) {
         if (event.getProjectile() instanceof EnderPearl) {
             Player player = event.getPlayer();
             UUID UUID = player.getUniqueId();
-            if (pearlCooldown.containsKey(UUID)) {
-                event.setCancelled(true);
-            }
 
+            new BukkitRunnable() {
+
+                @Override
+                public void run() {
+                    player.setCooldown(Material.ENDER_PEARL, 0);
+                }
+            }.runTaskLater(CustomGod.getInstance(), 1);
         }
 
     }
@@ -436,39 +384,11 @@ public class DamageListener implements Listener {
         if (event.getCause().equals(TeleportCause.ENDER_PEARL)) {
             Player player = event.getPlayer();
             UUID UUID = player.getUniqueId();
-            if (pearlCooldown.containsKey(UUID)) {
+            if (player.hasCooldown(Material.ENDER_PEARL)) {
+                player.sendMessage(ChatColor.RED + "You are currently pearl bound.");
                 event.setCancelled(true);
             }
         }
-    }
-
-    @EventHandler
-    public void onHandSwap(PlayerItemHeldEvent event) {
-
-        new BukkitRunnable() {
-
-            @Override
-            public void run() {
-                // TODO Auto-generated method stub
-                Player player = event.getPlayer();
-                ItemStack hand = player.getInventory().getItemInMainHand();
-
-                if (hand != null && hand.getType() != Material.AIR) {
-
-                    if (GodItems.isGod(hand)) {
-
-                        if (GodItems.getGodName(hand).equalsIgnoreCase("glacial brand")) {
-
-                            if (player.getWorld().hasStorm()) {
-
-                                player.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 15 * 20, 2, false, true, true));
-                                player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ILLUSIONER_PREPARE_BLINDNESS, 1f, 1.5f);
-                            }
-                        }
-                    }
-                }
-            }
-        }.runTaskLater(CustomGod.getInstance(), 1);
     }
 
     public static boolean inSpawn(org.bukkit.Location location) {

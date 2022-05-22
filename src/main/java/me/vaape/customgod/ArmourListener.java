@@ -25,41 +25,46 @@ public class ArmourListener implements Listener {
 		if (event.getNewArmorPiece() != null && event.getNewArmorPiece().getType() != Material.AIR) {
 			ItemStack armor = event.getNewArmorPiece();
 			Player player = event.getPlayer();
-			double maxHealth = player.getMaxHealth();
 			if (GodItems.isGod(armor)) {
-				if (GodItems.getGodName(armor).equalsIgnoreCase("daedric helm")) {
-					player.setMaxHealth(maxHealth + 4);
-					//player.removePotionEffect(PotionEffectType.FIRE_RESISTANCE);
+				if (GodItems.getGodName(armor).equalsIgnoreCase("Daedric Helm")) {
 					player.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, Integer.MAX_VALUE, 0));
 				}
-				if (GodItems.getGodName(armor).equalsIgnoreCase("theseus")) {
-					//player.removePotionEffect(PotionEffectType.INCREASE_DAMAGE);
+				if (GodItems.getGodName(armor).equalsIgnoreCase("Theseus")) {
 					player.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, Integer.MAX_VALUE, 1));
 				}
-				if (GodItems.getGodName(armor).equalsIgnoreCase("warlord cuirass")) {
-					player.setMaxHealth(maxHealth + 8);
+				if (GodItems.getGodName(armor).equalsIgnoreCase("Warlord Cuirass")) {
 				}
-				if (GodItems.getGodName(armor).equalsIgnoreCase("hermes leggings")) {
-					player.setMaxHealth(maxHealth + 4);
+				if (GodItems.getGodName(armor).equalsIgnoreCase("Hermes Leggings")) {
 					//player.removePotionEffect(PotionEffectType.SPEED);
 					player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 1));
 				}
-				if (GodItems.getGodName(armor).equalsIgnoreCase("brightwing")) {
-					player.setMaxHealth(maxHealth + 4);
+				if (GodItems.getGodName(armor).equalsIgnoreCase("Brightwing")) {
 				}
-				else if (GodItems.getGodName(armor).equalsIgnoreCase("snowy helm")) {
-					player.setMaxHealth(maxHealth + 6);
+				//SNOWY
+				else if (GodItems.getGodName(armor).equalsIgnoreCase("Snowy Helm")) {
 				}
-				else if (GodItems.getGodName(armor).equalsIgnoreCase("snowy chest")) {
-					player.setMaxHealth(maxHealth + 6);
+				else if (GodItems.getGodName(armor).equalsIgnoreCase("Green Snowy Chest") || GodItems.getGodName(armor).equalsIgnoreCase("Red Snowy Chest")) {
 					player.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, Integer.MAX_VALUE, 1));
 				}
-				else if (GodItems.getGodName(armor).equalsIgnoreCase("snowy legs")) {
-					player.setMaxHealth(maxHealth + 6);
+				else if (GodItems.getGodName(armor).equalsIgnoreCase("Green Snowy Legs") || GodItems.getGodName(armor).equalsIgnoreCase("Red Snowy Legs")) {
 					player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 1));
 				}
-				else if (GodItems.getGodName(armor).equalsIgnoreCase("snowy boots")) {
-					player.setMaxHealth(maxHealth + 6);
+				else if (GodItems.getGodName(armor).equalsIgnoreCase("Green Snowy Boots")) {
+				}
+				//VALENTINES
+				else if (GodItems.getGodName(armor).equalsIgnoreCase("Valentine's Helm")) {
+					player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, Integer.MAX_VALUE, 0));
+					player.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION, Integer.MAX_VALUE, 0));
+				}
+				else if (GodItems.getGodName(armor).equalsIgnoreCase("Cupid's Wings")) {
+					player.addPotionEffect(new PotionEffect(PotionEffectType.FAST_DIGGING, Integer.MAX_VALUE, 1));
+				}
+				else if (GodItems.getGodName(armor).equalsIgnoreCase("Valentine's Legs")) {
+					player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 1));
+					player.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, Integer.MAX_VALUE, 2));
+				}
+				else if (GodItems.getGodName(armor).equalsIgnoreCase("Easter Boots")) {
+					player.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, Integer.MAX_VALUE, 1));
 				}
 			}
 		}
@@ -69,36 +74,44 @@ public class ArmourListener implements Listener {
 			Player player = event.getPlayer();
 			double maxHealth = player.getMaxHealth();
 			if (GodItems.isGod(armor)) {
-				if (GodItems.getGodName(armor).equalsIgnoreCase("daedric helm")) {
-					player.setMaxHealth(maxHealth - 4);
+				if (GodItems.getGodName(armor).equalsIgnoreCase("Daedric Helm")) {
 					player.removePotionEffect(PotionEffectType.FIRE_RESISTANCE);					
 				}
-				else if (GodItems.getGodName(armor).equalsIgnoreCase("theseus")) {
+				else if (GodItems.getGodName(armor).equalsIgnoreCase("Theseus")) {
 					player.removePotionEffect(PotionEffectType.INCREASE_DAMAGE);
 				}
-				else if (GodItems.getGodName(armor).equalsIgnoreCase("warlord cuirass")) {
-					player.setMaxHealth(maxHealth - 8);
+				else if (GodItems.getGodName(armor).equalsIgnoreCase("Warlord Cuirass")) {
 				}
-				else if (GodItems.getGodName(armor).equalsIgnoreCase("hermes leggings")) {
-					player.setMaxHealth(maxHealth - 4);
+				else if (GodItems.getGodName(armor).equalsIgnoreCase("Hermes Leggings")) {
 					player.removePotionEffect(PotionEffectType.SPEED);
 				}
-				else if (GodItems.getGodName(armor).equalsIgnoreCase("brightwing")) {
-					player.setMaxHealth(maxHealth - 4);
+				else if (GodItems.getGodName(armor).equalsIgnoreCase("Brightwing")) {
 				}
-				else if (GodItems.getGodName(armor).equalsIgnoreCase("snowy helm")) {
-					player.setMaxHealth(maxHealth - 6);
+				//SNOWY
+				else if (GodItems.getGodName(armor).equalsIgnoreCase("Snowy Helm")) {
 				}
-				else if (GodItems.getGodName(armor).equalsIgnoreCase("snowy chest")) {
-					player.setMaxHealth(maxHealth - 6);
+				else if (GodItems.getGodName(armor).equalsIgnoreCase("Green Snowy Chest") || GodItems.getGodName(armor).equalsIgnoreCase("Red Snowy Chest")) {
 					player.removePotionEffect(PotionEffectType.INCREASE_DAMAGE);
 				}
-				else if (GodItems.getGodName(armor).equalsIgnoreCase("snowy legs")) {
-					player.setMaxHealth(maxHealth - 6);
+				else if (GodItems.getGodName(armor).equalsIgnoreCase("Green Snowy Legs") || GodItems.getGodName(armor).equalsIgnoreCase("Red Snowy Legs")) {
 					player.removePotionEffect(PotionEffectType.SPEED);
 				}
 				else if (GodItems.getGodName(armor).equalsIgnoreCase("snowy boots")) {
-					player.setMaxHealth(maxHealth - 6);
+				}
+				//VALENTINE'S
+				else if (GodItems.getGodName(armor).equalsIgnoreCase("Valentine's Helm")) {
+					player.removePotionEffect(PotionEffectType.REGENERATION);
+					player.removePotionEffect(PotionEffectType.NIGHT_VISION);
+				}
+				else if (GodItems.getGodName(armor).equalsIgnoreCase("Cupid's Wings")) {
+					player.removePotionEffect(PotionEffectType.FAST_DIGGING);
+				}
+				else if (GodItems.getGodName(armor).equalsIgnoreCase("Valentine's Legs")) {
+					player.removePotionEffect(PotionEffectType.SPEED);
+					player.removePotionEffect(PotionEffectType.JUMP);
+				}
+				else if (GodItems.getGodName(armor).equalsIgnoreCase("Easter Boots")) {
+					player.removePotionEffect(PotionEffectType.JUMP);
 				}
 			}
 		}
@@ -113,7 +126,7 @@ public class ArmourListener implements Listener {
 			if (event.getCause() == DamageCause.FALL ) {
 				if (boots != null && boots.getType() != Material.AIR) {
 					if (GodItems.isGod(boots)) {
-						if (GodItems.getGodName(boots).equalsIgnoreCase("brightwing")) {
+						if (GodItems.getGodName(boots).equalsIgnoreCase("Brightwing")) {
 							event.setCancelled(true);
 						}
 					}
